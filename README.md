@@ -63,6 +63,30 @@ I allowed SSH and HTTP, then enabled UFW with default-deny incoming policy:
 
 ![UFW Status](screenshots/ufw-status.png)
 
+## Step 7: Monitoring Stack
+
+I set up a monitoring stack to track server health in real-time.
+
+- **Node Exporter** exposes system metrics (CPU, RAM, Disk) on port 9100
+- **Prometheus** scrapes and stores those metrics on port 9090
+- **Grafana** visualizes the data in dashboards on port 3000
+
+![Grafana Dashboard](screenshots/grafana-dashboard.png)
+
+---
+
+## Step 8: Ansible Automation
+
+I wrote an Ansible playbook to automate NGINX installation and service management.
+
+![Ansible Playbook](screenshots/ansible-playbook.png)
+
+Running the playbook:
+
+![Ansible Output](screenshots/ansible-output.png)
+
+The output shows `ok=3, changed=0` — confirming the desired state was already achieved (idempotent).
+
 ## Challenges and Solutions
 
 ### Challenge 1: Apache/NGINX Port 80 Conflict
