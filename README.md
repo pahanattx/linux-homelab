@@ -85,6 +85,19 @@ Running the playbook:
 
 The output shows `ok=3, changed=0` — confirming the desired state was already achieved (idempotent).
 
+## Step 9: Alerting with Alertmanager
+
+I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
+
+![Slack Alerts](screenshots/slack-alerts.png)
+
+![Alertmanager Status](screenshots/alertmanager-status.png)
+
+- Prometheus rule triggers when CPU > 80% for 1 minute
+- Alertmanager receives the alert and sends it to a Slack channel via webhook
+- Verified with both a real CPU load test and a manual test alert
+
+
 ## Challenges and Solutions
 
 ### Challenge 1: Apache/NGINX Port 80 Conflict
