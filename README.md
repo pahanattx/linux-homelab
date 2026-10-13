@@ -174,7 +174,6 @@ The custom landing page at `/var/www/html/index.html` contains a simple HTML fil
 ## Next Steps
 
 - Add SSL/TLS with Let's Encrypt
-- Set up monitoring alerts with Alertmanager
 - Deploy to AWS EC2
 - Set up CI/CD with GitHub Actions
 
