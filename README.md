@@ -11,6 +11,11 @@ I built this homelab to gain practical, hands-on experience with Linux systems a
 - **Guest OS:** Ubuntu Server 22.04 LTS
 - **Networking:** NAT + Port Forwarding
 
+## Architecture
+
+![Architecture Diagram](screenshots/architecture-diagram.png)
+
+
 ## Step 1: Virtual Machine Setup
 
 I installed VirtualBox on Windows and created a new Ubuntu Server VM with 2GB RAM, 2 CPU cores, 20GB disk, and a NAT network adapter.
