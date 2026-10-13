@@ -192,7 +192,7 @@ The output shows `ok=3, changed=0` — confirming the desired state was already 
 
 **Diagnosis:** Used `sudo nginx -t` to validate the config.
 
-**Solution:** Ran `sudo sed -i 's/default_sever/default_server/' /etc/nginx/sites-enabled/default`, then `sudo nginx -t`, then `sudo systemctl restart nginx`.
+Ran `sudo sed -i 's/default_sever/default_server/' /etc/nginx/sites-available/default`, then `sudo nginx -t`, then `sudo systemctl restart nginx`.
 
 **Lesson:** Always test config with `nginx -t` before restarting.
 
