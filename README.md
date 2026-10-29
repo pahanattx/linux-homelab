@@ -175,9 +175,15 @@ The custom landing page at `/var/www/html/index.html` contains a simple HTML pag
 
 ## Next Steps
 
+<<<<<<< HEAD
 - Add SSL/TLS using Let's Encrypt.
 - Deploy the homelab workload to AWS EC2.
 - Set up CI/CD with GitHub Actions.
+=======
+- Add SSL/TLS with Let's Encrypt
+- Deploy to AWS EC2
+- Set up CI/CD with GitHub Actions
+>>>>>>> cc788d3b34202883963d17e97986435e47986d1f
 
 ## License
 
