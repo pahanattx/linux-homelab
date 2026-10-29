@@ -15,7 +15,6 @@ I built this homelab to gain practical, hands-on experience with Linux systems a
 
 ![Architecture Diagram](screenshots/architecture-diagram.png)
 
-
 ## Step 1: Virtual Machine Setup
 
 I installed VirtualBox on Windows and created a new Ubuntu Server VM with 2GB RAM, 2 CPU cores, 20GB disk, and a NAT network adapter.
@@ -28,7 +27,7 @@ I installed OpenSSH server with `sudo apt install openssh-server -y`, then enabl
 
 ## Step 3: NAT Port Forwarding
 
-The VM is on a NAT network, so its IP is not reachable from Windows. I configured port forwarding in VirtualBox:
+The VM is on a NAT network, so its IP is not directly reachable from Windows. I configured port forwarding in VirtualBox:
 
 - Host 2222 to Guest 22 (SSH)
 - Host 8080 to Guest 80 (HTTP)
@@ -41,7 +40,7 @@ Then connected from Windows PowerShell with `ssh ajax@localhost -p 2222`.
 
 ## Step 4: NGINX Web Server
 
-I installed NGINX with `sudo apt install nginx -y`. It failed to start because Apache was already on port 80 (see Challenge 1). After resolving, I verified with `sudo ss -tlnp | grep :80`.
+I installed NGINX with `sudo apt install nginx -y`. It failed to start because Apache was already using port 80 (see Challenge 1). After resolving the conflict, I verified the listener with `sudo ss -tlnp | grep :80`.
 
 ![Port 80](screenshots/port-80-listening.png)
 
@@ -59,22 +58,25 @@ Accessed at `http://localhost:8080`:
 
 ## Step 6: UFW Firewall
 
-I allowed SSH and HTTP, then enabled UFW with default-deny incoming policy:
+I allowed SSH and HTTP traffic, then enabled UFW with a default-deny incoming policy:
 
 `sudo ufw allow 22`
+
 `sudo ufw allow 80`
+
 `sudo ufw enable`
+
 `sudo ufw status verbose`
 
 ![UFW Status](screenshots/ufw-status.png)
 
 ## Step 7: Monitoring Stack
 
-I set up a monitoring stack to track server health in real-time.
+I set up a monitoring stack to track server health.
 
-- **Node Exporter** exposes system metrics (CPU, RAM, Disk) on port 9100
-- **Prometheus** scrapes and stores those metrics on port 9090
-- **Grafana** visualizes the data in dashboards on port 3000
+- **Node Exporter** exposes system metrics such as CPU, RAM, and disk usage on port 9100.
+- **Prometheus** scrapes and stores those metrics on port 9090.
+- **Grafana** visualizes the data in dashboards on port 3000.
 
 ![Grafana Dashboard](screenshots/grafana-dashboard.png)
 
@@ -88,7 +90,7 @@ Running the playbook:
 
 ![Ansible Output](screenshots/ansible-output.png)
 
-The output shows `ok=3, changed=0` — confirming the desired state was already achieved (idempotent).
+The output shows `ok=3, changed=0`, indicating that the desired state was already achieved and no changes were required during that run.
 
 ## Step 9: Alerting with Alertmanager
 
@@ -98,10 +100,9 @@ I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
 
 ![Alertmanager Status](screenshots/alertmanager-status.png)
 
-- Prometheus rule triggers when CPU > 80% for 1 minute
-- Alertmanager receives the alert and sends it to a Slack channel via webhook
-- Verified with both a real CPU load test and a manual test alert
-
+- A Prometheus rule triggers when CPU usage exceeds 80% for one minute.
+- Alertmanager receives the alert and sends it to a Slack channel through a webhook.
+- I verified alert delivery using a CPU load test and a manual test alert.
 
 ## Challenges and Solutions
 
@@ -111,48 +112,48 @@ I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
 
 **Error:** `nginx: [emerg] still could not bind()`
 
-**Diagnosis:** Ran `sudo ss -tlnp | grep :80` and found Apache was already listening on port 80.
+**Diagnosis:** I ran `sudo ss -tlnp | grep :80` and found Apache was already listening on port 80.
 
-**Solution:** Ran `sudo systemctl stop apache2`, then `sudo systemctl disable apache2`, then `sudo systemctl start nginx`.
+**Solution:** I ran `sudo systemctl stop apache2`, then `sudo systemctl disable apache2`, followed by `sudo systemctl start nginx`.
 
-**Lesson:** Only one service can bind to a port at a time.
+**Lesson:** Two services cannot simultaneously bind to the same IP address and port using conflicting socket settings.
 
 ### Challenge 2: NGINX Config Typo
 
-**Problem:** Intentionally broke the NGINX config to practice troubleshooting.
+**Problem:** I intentionally introduced a typo in the NGINX configuration to practice troubleshooting.
 
 **Error:** `invalid parameter "default_sever" in /etc/nginx/sites-available/default:22`
 
-**Diagnosis:** Used `sudo nginx -t` to validate the config.
+**Diagnosis:** I used `sudo nginx -t` to validate the configuration.
 
-**Solution:** Ran `sudo sed -i 's/default_sever/default_server/' /etc/nginx/sites-available/default`, then `sudo nginx -t`, then `sudo systemctl restart nginx`.
+**Solution:** I ran `sudo sed -i 's/default_sever/default_server/' /etc/nginx/sites-available/default`, then `sudo nginx -t`, followed by `sudo systemctl restart nginx`.
 
-**Lesson:** Always test config with `nginx -t` before restarting.
+**Lesson:** Validate configuration with `nginx -t` before restarting or reloading the service.
 
 ### Challenge 3: SSH Connection Timeout
 
-**Problem:** Could not SSH from Windows to Ubuntu VM.
+**Problem:** I could not establish an SSH connection from Windows to the Ubuntu VM.
 
 **Error:** `ssh: connect to host localhost port 22: Connection timed out`
 
-**Root Cause:** VM on NAT network - IP not reachable from host without port forwarding.
+**Root Cause:** The VM used NAT networking, and the host could not reach the guest's SSH service through `localhost:22` without a port-forwarding rule.
 
-**Solution:** Added VirtualBox port forwarding rule: Host 2222 to Guest 22.
+**Solution:** I added a VirtualBox port-forwarding rule mapping host port 2222 to guest port 22.
 
-**Lesson:** NAT isolates VMs from hosts. Port forwarding exposes services - similar to NAT gateways in cloud.
+**Lesson:** NAT port forwarding allows selected services on a guest VM to be reached through configured host ports. This differs from an AWS NAT Gateway, which provides outbound connectivity for resources in private subnets.
 
 ## Skills Demonstrated
 
-- Linux CLI (navigation, permissions, process management)
-- Networking (NAT, Port Forwarding, IP addressing)
-- Service Management (systemd, systemctl)
-- Web Server Administration (NGINX)
-- Firewall Configuration (UFW)
-- Monitoring (Prometheus, Grafana, Node Exporter)
-- Automation (Ansible)
-- Troubleshooting (log analysis, config validation)
-- Remote Server Management (SSH)
-- Documentation and Knowledge Sharing
+- Linux command-line operations, navigation, permissions, and process management
+- Networking fundamentals, NAT, port forwarding, and IP addressing
+- Service management using systemd and systemctl
+- Web server administration with NGINX
+- Firewall configuration using UFW
+- Monitoring with Prometheus, Grafana, and Node Exporter
+- Configuration management and automation with Ansible
+- Troubleshooting through log analysis and configuration validation
+- Remote server administration using SSH
+- Technical documentation and knowledge sharing
 
 ## Tools Used
 
@@ -163,20 +164,20 @@ I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
 | Web Server | NGINX |
 | Firewall | UFW |
 | Monitoring | Prometheus, Grafana, Node Exporter |
+| Alerting | Alertmanager, Slack |
 | Automation | Ansible |
 | Remote Access | OpenSSH |
 | Host OS | Windows 11 |
 
 ## Custom HTML Page
 
-The custom landing page at `/var/www/html/index.html` contains a simple HTML file with a heading "My Linux Homelab is Working!" and a paragraph "Served by NGINX on Ubuntu Server".
+The custom landing page at `/var/www/html/index.html` contains a simple HTML page with the heading "My Linux Homelab is Working!" and the paragraph "Served by NGINX on Ubuntu Server".
 
 ## Next Steps
 
-- Add SSL/TLS with Let's Encrypt
-- Set up monitoring alerts with Alertmanager
-- Deploy to AWS EC2
-- Set up CI/CD with GitHub Actions
+- Add SSL/TLS using Let's Encrypt.
+- Deploy the homelab workload to AWS EC2.
+- Set up CI/CD with GitHub Actions.
 
 ## License
 
