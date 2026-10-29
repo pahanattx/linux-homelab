@@ -27,12 +27,14 @@ I installed OpenSSH server with `sudo apt install openssh-server -y`, then enabl
 
 ## Step 3: NAT Port Forwarding
 
-The VM is on a NAT network, so its IP is not directly reachable from Windows. I configured port forwarding in VirtualBox:
+The VM uses NAT networking, so I configured port forwarding in VirtualBox to allow access to selected services from the Windows host:
 
-- Host 2222 to Guest 22 (SSH)
-- Host 8080 to Guest 80 (HTTP)
+- Host port 2222 to guest port 22 (SSH)
+- Host port 8080 to guest port 80 (HTTP)
 
-Then connected from Windows PowerShell with `ssh ajax@localhost -p 2222`.
+Then I connected from Windows PowerShell using:
+
+`ssh ajax@localhost -p 2222`
 
 ![SSH Login](screenshots/ssh-login.png)
 
@@ -40,7 +42,9 @@ Then connected from Windows PowerShell with `ssh ajax@localhost -p 2222`.
 
 ## Step 4: NGINX Web Server
 
-I installed NGINX with `sudo apt install nginx -y`. It failed to start because Apache was already using port 80 (see Challenge 1). After resolving the conflict, I verified the listener with `sudo ss -tlnp | grep :80`.
+I installed NGINX with `sudo apt install nginx -y`. It initially failed to start because Apache was already using port 80 (see Challenge 1). After resolving the conflict, I verified the listening port with:
+
+`sudo ss -tlnp | grep :80`
 
 ![Port 80](screenshots/port-80-listening.png)
 
@@ -52,13 +56,17 @@ I replaced the default NGINX page at `/var/www/html/index.html` with a custom HT
 
 ![Custom Page](screenshots/custom-page-proof.png)
 
-Accessed at `http://localhost:8080`:
+I accessed the page at `http://localhost:8080`.
 
 ![Browser](screenshots/browser-page.png)
 
 ## Step 6: UFW Firewall
 
-I allowed SSH and HTTP traffic, then enabled UFW with a default-deny incoming policy:
+I configured UFW to deny incoming traffic by default, allowed SSH and HTTP traffic, and enabled the firewall.
+
+Commands used:
+
+`sudo ufw default deny incoming`
 
 `sudo ufw allow 22`
 
@@ -76,7 +84,7 @@ I set up a monitoring stack to track server health.
 
 - **Node Exporter** exposes system metrics such as CPU, RAM, and disk usage on port 9100.
 - **Prometheus** scrapes and stores those metrics on port 9090.
-- **Grafana** visualizes the data in dashboards on port 3000.
+- **Grafana** visualizes the collected metrics in dashboards on port 3000.
 
 ![Grafana Dashboard](screenshots/grafana-dashboard.png)
 
@@ -90,7 +98,7 @@ Running the playbook:
 
 ![Ansible Output](screenshots/ansible-output.png)
 
-The output shows `ok=3, changed=0`, indicating that the desired state was already achieved and no changes were required during that run.
+The output shows `ok=3, changed=0`, indicating that the tasks completed successfully without making changes during that run.
 
 ## Step 9: Alerting with Alertmanager
 
@@ -100,8 +108,8 @@ I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
 
 ![Alertmanager Status](screenshots/alertmanager-status.png)
 
-- A Prometheus rule triggers when CPU usage exceeds 80% for one minute.
-- Alertmanager receives the alert and sends it to a Slack channel through a webhook.
+- A Prometheus alerting rule triggers when CPU usage exceeds 80% for one minute.
+- Alertmanager receives the alert and sends a notification to a Slack channel through a webhook.
 - I verified alert delivery using a CPU load test and a manual test alert.
 
 ## Challenges and Solutions
@@ -112,11 +120,11 @@ I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
 
 **Error:** `nginx: [emerg] still could not bind()`
 
-**Diagnosis:** I ran `sudo ss -tlnp | grep :80` and found Apache was already listening on port 80.
+**Diagnosis:** I ran `sudo ss -tlnp | grep :80` and found that Apache was already listening on port 80.
 
 **Solution:** I ran `sudo systemctl stop apache2`, then `sudo systemctl disable apache2`, followed by `sudo systemctl start nginx`.
 
-**Lesson:** Two services cannot simultaneously bind to the same IP address and port using conflicting socket settings.
+**Lesson:** Two services cannot simultaneously bind to the same IP address and port when their socket bindings conflict.
 
 ### Challenge 2: NGINX Config Typo
 
@@ -136,9 +144,9 @@ I configured Alertmanager to send alerts to Slack when CPU usage exceeds 80%.
 
 **Error:** `ssh: connect to host localhost port 22: Connection timed out`
 
-**Root Cause:** The VM used NAT networking, and the host could not reach the guest's SSH service through `localhost:22` without a port-forwarding rule.
+**Root Cause:** I initially attempted to connect to `localhost` on host port 22, but the VirtualBox port-forwarding rule was configured to map host port 2222 to guest port 22.
 
-**Solution:** I added a VirtualBox port-forwarding rule mapping host port 2222 to guest port 22.
+**Solution:** I configured the VirtualBox port-forwarding rule to map host port 2222 to guest port 22, then connected using `ssh ajax@localhost -p 2222`.
 
 **Lesson:** NAT port forwarding allows selected services on a guest VM to be reached through configured host ports. This differs from an AWS NAT Gateway, which provides outbound connectivity for resources in private subnets.
 
@@ -175,15 +183,9 @@ The custom landing page at `/var/www/html/index.html` contains a simple HTML pag
 
 ## Next Steps
 
-<<<<<<< HEAD
 - Add SSL/TLS using Let's Encrypt.
 - Deploy the homelab workload to AWS EC2.
 - Set up CI/CD with GitHub Actions.
-=======
-- Add SSL/TLS with Let's Encrypt
-- Deploy to AWS EC2
-- Set up CI/CD with GitHub Actions
->>>>>>> cc788d3b34202883963d17e97986435e47986d1f
 
 ## License
 
